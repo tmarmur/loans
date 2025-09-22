@@ -83,6 +83,44 @@ export interface BusinessTrainingCourse {
   category: string
 }
 
+export interface Financier {
+  id: string
+  name: string
+  email: string
+  contactPerson: string
+  phone: string
+  address: string
+  registrationNumber: string
+  status: "active" | "inactive" | "suspended"
+  loanLimit: number
+  interestRateRange: {
+    min: number
+    max: number
+  }
+  specializations: string[]
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface SystemSettings {
+  id: string
+  category: "general" | "security" | "notifications" | "integrations"
+  key: string
+  value: string
+  description: string
+  type: "string" | "number" | "boolean" | "json"
+  updatedAt: Date
+  updatedBy: string
+}
+
+export interface SystemHealth {
+  service: string
+  status: "healthy" | "warning" | "error"
+  lastCheck: Date
+  responseTime?: number
+  errorMessage?: string
+}
+
 export type LoanStatus = "draft" | "submitted" | "under-review" | "approved" | "rejected" | "disbursed"
 export type DocumentStatus = "pending" | "approved" | "rejected"
 export type ClaimStatus = "pending" | "approved" | "rejected"
