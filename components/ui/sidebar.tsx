@@ -3,6 +3,9 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { Menu } from "lucide-react"
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
@@ -42,8 +45,61 @@ interface SidebarMenuButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEl
   asChild?: boolean
 }
 
-const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(({ className, children, ...props }, ref) => {
+const SidebarContext = React.createContext<{
+  isMobile: boolean
+  isOpen: boolean
+  setIsOpen: (open: boolean) => void
+}>({
+  isMobile: false,
+  isOpen: false,
+  setIsOpen: () => {},
+})
+
+const useSidebar = () => {
+  const context = React.useContext(SidebarContext)
+  if (!context) {
+    throw new Error("useSidebar must be used within a SidebarProvider")
+  }
+  return context
+}
+
+export function SidebarProvider({ children }: { children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = React.useState(false)
+  const [isMobile, setIsMobile] = React.useState(false)
+
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+      if (window.innerWidth >= 768) {
+        setIsOpen(false) // Close mobile sidebar when switching to desktop
+      }
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  return <SidebarContext.Provider value={{ isMobile, isOpen, setIsOpen }}>{children}</SidebarContext.Provider>
+}
+
+export function SidebarTrigger({ className, ...props }: React.ComponentProps<typeof Button>) {
+  const { isMobile, setIsOpen } = useSidebar()
+
+  if (!isMobile) return null
+
   return (
+    <Button variant="ghost" size="sm" className={cn("md:hidden", className)} onClick={() => setIsOpen(true)} {...props}>
+      <Menu className="h-4 w-4" />
+      <span className="sr-only">Toggle sidebar</span>
+    </Button>
+  )
+}
+
+const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(({ className, children, ...props }, ref) => {
+  const { isMobile, isOpen, setIsOpen } = useSidebar()
+
+  const sidebarContent = (
     <div
       ref={ref}
       className={cn("flex h-full w-64 flex-col bg-sidebar border-r border-sidebar-border", className)}
@@ -52,6 +108,18 @@ const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(({ className, chi
       {children}
     </div>
   )
+
+  if (isMobile) {
+    return (
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetContent side="left" className="p-0 w-64">
+          {sidebarContent}
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
+  return sidebarContent
 })
 Sidebar.displayName = "Sidebar"
 
@@ -139,6 +207,16 @@ SidebarMenuItem.displayName = "SidebarMenuItem"
 const SidebarMenuButton = React.forwardRef<HTMLButtonElement, SidebarMenuButtonProps>(
   ({ className, children, isActive, asChild = false, ...props }, ref) => {
     const Comp = asChild ? "span" : "button"
+    const { isMobile, setIsOpen } = useSidebar()
+
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (isMobile) {
+        setIsOpen(false)
+      }
+      if (props.onClick) {
+        props.onClick(e)
+      }
+    }
 
     return (
       <Comp
@@ -150,6 +228,7 @@ const SidebarMenuButton = React.forwardRef<HTMLButtonElement, SidebarMenuButtonP
           isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
           className,
         )}
+        onClick={handleClick}
         {...props}
       >
         {children}
@@ -169,4 +248,5 @@ export {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 }

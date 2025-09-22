@@ -16,6 +16,8 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarProvider,
+  SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
@@ -122,80 +124,85 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar>
-        <SidebarHeader>
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-              <Building2 className="h-4 w-4 text-primary-foreground" />
+    <SidebarProvider>
+      <div className="flex h-screen bg-background">
+        <Sidebar>
+          <SidebarHeader>
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+                <Building2 className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold">Loan Platform</h2>
+                <p className="text-xs text-muted-foreground capitalize">{user.role} Portal</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-sm font-semibold">Loan Platform</h2>
-              <p className="text-xs text-muted-foreground capitalize">{user.role} Portal</p>
+          </SidebarHeader>
+
+          <SidebarContent>
+            {navigation.map((group) => (
+              <SidebarGroup key={group.label}>
+                <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.items.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton asChild isActive={pathname === item.href}>
+                          <Link href={item.href}>
+                            <item.icon className="h-4 w-4" />
+                            {item.title}
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))}
+          </SidebarContent>
+        </Sidebar>
+
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="border-b border-border bg-background px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <SidebarTrigger />
+                <div>
+                  <h1 className="text-2xl font-semibold text-foreground">Welcome back, {user.name}</h1>
+                  <p className="text-sm text-muted-foreground">Manage your loans and applications</p>
+                </div>
+              </div>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback>
+                        {user.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                  <DropdownMenuItem onClick={() => router.push("/settings")}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          </div>
-        </SidebarHeader>
+          </header>
 
-        <SidebarContent>
-          {navigation.map((group) => (
-            <SidebarGroup key={group.label}>
-              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {group.items.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton asChild isActive={pathname === item.href}>
-                        <Link href={item.href}>
-                          <item.icon className="h-4 w-4" />
-                          {item.title}
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          ))}
-        </SidebarContent>
-      </Sidebar>
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="border-b border-border bg-background px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-foreground">Welcome back, {user.name}</h1>
-              <p className="text-sm text-muted-foreground">Manage your loans and applications</p>
-            </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback>
-                      {user.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end">
-                <DropdownMenuItem onClick={() => router.push("/settings")}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </header>
-
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+          <main className="flex-1 overflow-auto p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   )
 }
